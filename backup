@@ -21,7 +21,11 @@ def backup(*, sources, exclude, host, destination, logdir, dry=False, list_files
     if list_:
         print(ssh(host, f'ls -d {destination}/????-??-??-??????'))
         return
-    sources = [p for patt in sources for p in Path.home().glob(patt)]
+    sources = [
+        p
+        for patt in sources
+        for p in (Path.home().glob(patt) if not patt.startswith('/') else [patt])
+    ]
     exclude = ['--exclude=' + patt for patt in exclude]
     if list_files:
         rsync(
@@ -32,7 +36,7 @@ def backup(*, sources, exclude, host, destination, logdir, dry=False, list_files
         )
         return
     date = ssh(host, "date +'%Y-%m-%d-%H%M%S'")
-    print('Old:', ssh(host, f'readlink {destination}/Latest'))
+    print('Old:', ssh(host, f'readlink {destination}/Latest || echo None'))
     print('New:', date)
     location = f'{destination}/{date}.inProgress'
     if dry:
