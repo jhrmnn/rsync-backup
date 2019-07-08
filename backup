@@ -17,10 +17,13 @@ def rsync(*args):
     sp.run(['rsync', *args], check=True)
 
 
-def backup(*, sources, exclude, host, destination, logdir, dry=False, list_=False):
+def backup(*, sources, exclude, host, destination, logdir, dry=False, list_files=False, list_=False):
+    if list_:
+        print(ssh(host, f'ls -d {destination}/????-??-??-??????'))
+        return
     sources = [p for patt in sources for p in Path.home().glob(patt)]
     exclude = ['--exclude=' + patt for patt in exclude]
-    if list_:
+    if list_files:
         rsync(
             *'--dry-run -i -az --stats'.split(),
             *exclude,
@@ -58,6 +61,7 @@ def backup(*, sources, exclude, host, destination, logdir, dry=False, list_=Fals
 def get_cli():
     parser = ArgumentParser()
     parser.add_argument('--dry', action='store_true')
+    parser.add_argument('--list-files', dest='list_', action='store_true')
     parser.add_argument('-l', '--list', dest='list_', action='store_true')
     return vars(parser.parse_args())
 
